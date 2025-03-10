@@ -1,0 +1,30 @@
+spring:
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/splitwise
+    username: splitwise_user
+    password: test123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: your-secret-key-here-make-it-long-and-secure-in-production
+  expiration: 86400000 # 24 hours in milliseconds
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.example.demo: DEBUG 
