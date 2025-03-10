@@ -242,13 +242,122 @@ We chose PostgreSQL for this application for several key reasons:
 
 ## Getting Started
 
-### Prerequisites
-- JDK 17 or higher
-- PostgreSQL 12 or higher
-- Gradle 7.x
-- Git
+### Running with Docker
 
-### Local Setup
+1. **Build and Run with Docker Compose**
+   ```bash
+   # Build and start all services
+   docker-compose up --build
+
+   # Run in detached mode
+   docker-compose up -d
+   ```
+
+2. **Docker Configuration**
+   
+   Create `Dockerfile`:
+   ```dockerfile
+   FROM openjdk:17-slim
+   WORKDIR /app
+   COPY build/libs/*.jar app.jar
+   EXPOSE 8080
+   ENTRYPOINT ["java", "-jar", "app.jar"]
+   ```
+
+   Create `docker-compose.yml`:
+   ```yaml
+   version: '3.8'
+   
+   services:
+     app:
+       build: .
+       ports:
+         - "8080:8080"
+       environment:
+         - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/expense_sharing
+         - SPRING_DATASOURCE_USERNAME=expense_user
+         - SPRING_DATASOURCE_PASSWORD=your_password
+       depends_on:
+         - db
+   
+     db:
+       image: postgres:12
+       ports:
+         - "5432:5432"
+       environment:
+         - POSTGRES_DB=expense_sharing
+         - POSTGRES_USER=expense_user
+         - POSTGRES_PASSWORD=your_password
+       volumes:
+         - postgres_data:/var/lib/postgresql/data
+         - ./src/main/resources/db/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+   
+   volumes:
+     postgres_data:
+   ```
+
+3. **Docker Commands**
+   ```bash
+   # Build the application
+   ./gradlew build
+
+   # Build Docker image
+   docker build -t expense-sharing-app .
+
+   # Run individual containers
+   docker run -d --name postgres -p 5432:5432 \
+     -e POSTGRES_DB=expense_sharing \
+     -e POSTGRES_USER=expense_user \
+     -e POSTGRES_PASSWORD=your_password \
+     postgres:12
+
+   docker run -d --name expense-app -p 8080:8080 \
+     --link postgres:db \
+     expense-sharing-app
+
+   # View logs
+   docker logs expense-app
+   docker logs postgres
+
+   # Stop containers
+   docker-compose down
+
+   # Remove volumes
+   docker-compose down -v
+   ```
+
+4. **Accessing the Application**
+   - API: http://localhost:8080
+   - Database: localhost:5432
+
+5. **Container Management**
+   ```bash
+   # List running containers
+   docker ps
+
+   # Stop specific container
+   docker stop expense-app
+
+   # Remove container
+   docker rm expense-app
+
+   # Remove image
+   docker rmi expense-sharing-app
+   ```
+
+6. **Troubleshooting Docker**
+   - Check container logs: `docker logs <container_name>`
+   - Check container status: `docker ps -a`
+   - Inspect container: `docker inspect <container_name>`
+   - Check network: `docker network ls`
+   - Reset everything:
+     ```bash
+     docker-compose down -v
+     docker system prune -a
+     docker volume prune
+     ```
+
+### Local Setup (Without Docker)
 
 1. **Clone the Repository**
    ```bash
